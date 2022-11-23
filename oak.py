@@ -6,6 +6,8 @@ import RPi.GPIO as GPIO
 import time
 import imutils
 import serial
+from controller.imageController import ImageController
+
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1) 
 
 print("Load all libraries")
@@ -47,6 +49,15 @@ with dai.Device(pipeline, device_info) as device:
             name_image_oak = f"./OAK1/{file_name}.jpg"
             cv2.imwrite(name_image_oak, frame) 
             print(f"OAK1: *{name_image_oak}* saved.")
+
+            lat, lon = string[3], string[5]
+            
+            image_saved = ImageController.insert(name_image_oak, lat, lon)
+
+            if image_saved:
+                data_save = f'{name_image_oak} - {lat} - {lon}'
+                print(f"Imagem salva no banco de dados: {data_save}")
+
             i += 1
         else:
             GPIO.output(ledPin, GPIO.LOW)
@@ -54,8 +65,8 @@ with dai.Device(pipeline, device_info) as device:
         key = cv2.waitKey(1) & 0xFF
         
         if key == ord('q'):
-            pipeline_rs.stop()
+            pipeline.stop()
             break
        
-pipeline_rs.stop()
+pipeline.stop()
         
